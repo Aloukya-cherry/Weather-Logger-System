@@ -1,0 +1,41 @@
+#include <DHT.h>
+#include <Wire.h>
+#include <Adafruit_BMP085.h>
+#include <RTClib.h>
+#include <SD.h>
+#include <SPI.h>
+
+#define DHTPIN 2
+#define DHTTYPE DHT11
+#define SD_PIN 4
+
+DHT dht(DHTPIN, DHTTYPE);
+Adafruit_BMP085 bmp;
+RTC_DS3231 rtc;
+
+void setup() {
+  Serial.begin(9600);
+  dht.begin();
+  bmp.begin();
+  rtc.begin();
+  SD.begin(SD_PIN);
+  
+  File dataFile = SD.open("weather.csv", FILE_WRITE);
+  dataFile.println("Date,Time,Temperature(C),Humidity(%),Pressure(hPa)");
+  dataFile.close();
+}
+
+void loop() {
+  DateTime now = rtc.now();
+  float temp = dht.readTemperature();
+  float hum = dht.readHumidity();
+  float pressure = bmp.readPressure() / 100.0;
+
+  File dataFile = SD.open("weather.csv", FILE_WRITE);
+  dataFile.print(now.day()); dataFile.print("/"); dataFile.print(now.month()); dataFile.print(",");
+  dataFile.print(now.hour()); dataFile.print(":"); dataFile.print(now.minute()); dataFile.print(",");
+  dataFile.print(temp); dataFile.print(","); dataFile.print(hum); dataFile.print(","); dataFile.println(pressure);
+  dataFile.close();
+
+  Serial.println("Data Logged");
+  delay(5000); // 
